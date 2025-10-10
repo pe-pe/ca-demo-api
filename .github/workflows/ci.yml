@@ -101,7 +101,7 @@ jobs:
       run: bandit --skip B104 app.py -f json -o bandit-report.json || true
 
     - name: Upload bandit results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bandit-results
         path: bandit-report.json
@@ -110,7 +110,7 @@ jobs:
       run: safety check --json --output safety-report.json || true
 
     - name: Upload safety results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: safety-results
         path: safety-report.json
