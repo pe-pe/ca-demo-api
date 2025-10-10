@@ -1,0 +1,349 @@
+openapi: 3.0.3
+info:
+  title: Basic Auth CA Demo API
+  description: |
+    A Flask-based Certificate Authority (CA) demo application that provides certificate signing services.
+
+    This API allows clients to:
+    - Retrieve the CA certificate
+    - Request certificate signing using Basic Authentication
+    - Request certificate signing using Bearer Token authentication
+
+    The application supports Certificate Signing Requests (CSR) in multiple formats:
+    - Direct PEM format
+    - Base64 encoded PEM format
+    - Base64 encoded DER format
+  version: 1.0.0
+  contact:
+    name: CA Demo API
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:5000
+    description: Local demo server
+
+paths:
+  /:
+    get:
+      summary: Get API information
+      description: Returns basic information about the API and available endpoints
+      operationId: getIndex
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  endpoints:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - "GET /api/ca_cert"
+                      - "POST /api/request_cert"
+                      - "POST /api/request_cert_bearer"
+
+  /api/ca_cert:
+    get:
+      summary: Get CA certificate
+      description: Retrieves the Certificate Authority's public certificate in PEM format
+      operationId: getCaCertificate
+      responses:
+        '200':
+          description: CA certificate in PEM format
+          content:
+            application/x-pem-file:
+              schema:
+                type: string
+                format: binary
+                description: CA certificate in PEM format
+              example: |
+                -----BEGIN CERTIFICATE-----
+                MIIDXTCCAkWgAwIBAgIJAKoK/heBjcOuMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+                ...
+                -----END CERTIFICATE-----
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/request_cert:
+    post:
+      summary: Request certificate signing (Basic Auth)
+      description: |
+        Submit a Certificate Signing Request (CSR) to be signed by the CA.
+        Requires Basic Authentication.
+
+        The CSR can be provided in one of the following formats:
+        - Direct PEM format (starts with -----BEGIN CERTIFICATE REQUEST-----)
+        - Base64 encoded PEM format (entire PEM block is base64 encoded)
+        - Base64 encoded DER format (binary DER format encoded as base64)
+      operationId: requestCertificateBasicAuth
+      security:
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateRequest'
+            examples:
+              pem_format:
+                summary: Direct PEM format
+                value:
+                  CSR: |
+                    -----BEGIN CERTIFICATE REQUEST-----
+                    MIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3
+                    DQEBAQUAA4IBDwAwggEKAoIBAQC7VJTUt9Us8cKBwko9vwW4vJKb8HEo1T8kphYg
+                    ...
+                    -----END CERTIFICATE REQUEST-----
+              base64_pem:
+                summary: Base64 encoded PEM format
+                value:
+                  CSR: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1dqQ0NBVUlDQVFBd0ZURVRNQKVA..."
+              base64_der:
+                summary: Base64 encoded DER format
+                value:
+                  CSR: "MIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3..."
+      responses:
+        '200':
+          description: Signed certificate in PEM format
+          content:
+            application/x-pem-file:
+              schema:
+                type: string
+                format: binary
+                description: Signed certificate in PEM format
+              example: |
+                -----BEGIN CERTIFICATE-----
+                MIIDXTCCAkWgAwIBAgIJAKoK/heBjcOuMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+                ...
+                -----END CERTIFICATE-----
+        '400':
+          description: Bad request - Invalid CSR or request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_csr:
+                  summary: Missing CSR field
+                  value:
+                    error: "missing csr field (PEM or base64 DER) in JSON body"
+                invalid_json:
+                  summary: Invalid JSON
+                  value:
+                    error: "Request must contain JSON data"
+                empty_csr:
+                  summary: Empty CSR
+                  value:
+                    error: "CSR field cannot be empty"
+                invalid_csr_format:
+                  summary: Invalid CSR format
+                  value:
+                    error: "failed to parse CSR: CSR must be in PEM format, base64 encoded PEM format, or base64 encoded DER format"
+                invalid_duration:
+                  summary: Invalid duration value
+                  value:
+                    error: "Duration must be a positive number"
+                invalid_duration_type:
+                  summary: Invalid duration type
+                  value:
+                    error: "Invalid duration value: invalid literal for int() with base 10: 'invalid'"
+        '401':
+          description: Unauthorized - Invalid or missing Basic Authentication
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Unauthorized"
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+                example: 'Basic realm="Login Required"'
+        '500':
+          description: Internal server error - Certificate signing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/request_cert_bearer:
+    post:
+      summary: Request certificate signing (Bearer Token)
+      description: |
+        Submit a Certificate Signing Request (CSR) to be signed by the CA.
+        Requires Bearer Token authentication.
+
+        The CSR can be provided in one of the following formats:
+        - Direct PEM format (starts with -----BEGIN CERTIFICATE REQUEST-----)
+        - Base64 encoded PEM format (entire PEM block is base64 encoded)
+        - Base64 encoded DER format (binary DER format encoded as base64)
+      operationId: requestCertificateBearerAuth
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificateRequest'
+            examples:
+              pem_format:
+                summary: Direct PEM format
+                value:
+                  CSR: |
+                    -----BEGIN CERTIFICATE REQUEST-----
+                    MIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3
+                    DQEBAQUAA4IBDwAwggEKAoIBAQC7VJTUt9Us8cKBwko9vwW4vJKb8HEo1T8kphYg
+                    ...
+                    -----END CERTIFICATE REQUEST-----
+              pem_with_duration:
+                summary: Direct PEM format with custom duration
+                value:
+                  CSR: |
+                    -----BEGIN CERTIFICATE REQUEST-----
+                    MIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3
+                    DQEBAQUAA4IBDwAwggEKAoIBAQC7VJTUt9Us8cKBwko9vwW4vJKb8HEo1T8kphYg
+                    ...
+                    -----END CERTIFICATE REQUEST-----
+                  duration: 7
+              base64_pem:
+                summary: Base64 encoded PEM format
+                value:
+                  CSR: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1dqQ0NBVUlDQVFBd0ZURVRNQKVA..."
+              base64_der:
+                summary: Base64 encoded DER format
+                value:
+                  CSR: "MIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3..."
+      responses:
+        '200':
+          description: Signed certificate in PEM format
+          content:
+            application/x-pem-file:
+              schema:
+                type: string
+                format: binary
+                description: Signed certificate in PEM format
+              example: |
+                -----BEGIN CERTIFICATE-----
+                MIIDXTCCAkWgAwIBAgIJAKoK/heBjcOuMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+                ...
+                -----END CERTIFICATE-----
+        '400':
+          description: Bad request - Invalid CSR or request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_csr:
+                  summary: Missing CSR field
+                  value:
+                    error: "missing csr field (PEM or base64 DER) in JSON body"
+                invalid_json:
+                  summary: Invalid JSON
+                  value:
+                    error: "Request must contain JSON data"
+                empty_csr:
+                  summary: Empty CSR
+                  value:
+                    error: "CSR field cannot be empty"
+                invalid_csr_format:
+                  summary: Invalid CSR format
+                  value:
+                    error: "failed to parse CSR: CSR must be in PEM format, base64 encoded PEM format, or base64 encoded DER format"
+                invalid_duration:
+                  summary: Invalid duration value
+                  value:
+                    error: "Duration must be a positive number"
+                invalid_duration_type:
+                  summary: Invalid duration type
+                  value:
+                    error: "Invalid duration value: invalid literal for int() with base 10: 'invalid'"
+        '401':
+          description: Unauthorized - Invalid or missing Bearer Token
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Unauthorized"
+        '500':
+          description: Internal server error - Certificate signing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CertificateRequest:
+      type: object
+      required:
+        - CSR
+      properties:
+        CSR:
+          type: string
+          description: |
+            Certificate Signing Request in one of the following formats:
+            - Direct PEM format (starts with -----BEGIN CERTIFICATE REQUEST-----)
+            - Base64 encoded PEM format (entire PEM block is base64 encoded)
+            - Base64 encoded DER format (binary DER format encoded as base64)
+          example: |
+            -----BEGIN CERTIFICATE REQUEST-----
+            MIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3
+            DQEBAQUAA4IBDwAwggEKAoIBAQC7VJTUt9Us8cKBwko9vwW4vJKb8HEo1T8kphYg
+            ...
+            -----END CERTIFICATE REQUEST-----
+        duration:
+          type: integer
+          minimum: 1
+          description: |
+            Optional certificate validity period in days. Must be a positive integer.
+            If not specified, defaults to the value configured in DEFAULT_CERT_VALIDITY_DAYS
+            environment variable (365 days by default). Accepts numeric values that will be
+            converted to integers.
+          example: 30
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: "missing csr field (PEM or base64 DER) in JSON body"
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: |
+        Basic HTTP authentication. Default credentials:
+        - Username: user (configurable via BASIC_USER environment variable)
+        - Password: password (configurable via BASIC_PASS environment variable)
+
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Bearer token authentication. Default token: "my-secret-token"
+        (configurable via BEARER_TOKEN environment variable)
+
+tags:
+  - name: Certificate Authority
+    description: Certificate Authority operations
+  - name: Authentication
+    description: Authentication-related operations
+
+# Additional API documentation
+externalDocs:
+  description: Learn more about X.509 certificates and CSRs
+  url: https://tools.ietf.org/html/rfc5280
