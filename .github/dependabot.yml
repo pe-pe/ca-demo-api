@@ -46,7 +46,7 @@ updates:
       time: "06:00"
     open-pull-requests-limit: 5
     commit-message:
-      prefix: "deps-ci"
+      prefix: "ci"
       include: "scope"
     labels:
       - "dependencies"
