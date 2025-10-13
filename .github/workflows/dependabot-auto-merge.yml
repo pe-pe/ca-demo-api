@@ -15,6 +15,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
+      - name: Checkout (actions/checkout)
+        uses: actions/checkout@v5
+
       - name: Check if all checks passed
         run: |
           # Wait 30 minutes for checks completion before checking their final status
