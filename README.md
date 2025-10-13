@@ -90,26 +90,26 @@ The API accepts CSRs in multiple formats:
 
 You can optionally specify the certificate validity period by including a `duration` field in your request:
 
-### Custom Duration (30 days)
+### Custom Duration (30 days = 43200 minutes)
 ```json
 {
   "CSR": "-----BEGIN CERTIFICATE REQUEST-----\nYOUR_CSR_HERE\n-----END CERTIFICATE REQUEST-----",
-  "duration": 30
+  "duration": 43200
 }
 ```
 
-### Custom Duration (7 days)
+### Custom Duration (7 days = 10080 minutes)
 ```json
 {
   "CSR": "-----BEGIN CERTIFICATE REQUEST-----\nYOUR_CSR_HERE\n-----END CERTIFICATE REQUEST-----",
-  "duration": 7
+  "duration": 10080
 }
 ```
 
 **Notes:**
 - `duration` must be a positive integer (accepts numeric strings and floats, converts to integer)
-- `duration` represents the validity period in days
-- If not specified, defaults to the value of `DEFAULT_CERT_VALIDITY_DAYS` environment variable (365 days)
+- `duration` represents the validity period in minutes
+- If not specified, defaults to the value of `DEFAULT_CERT_VALIDITY_MINUTES` environment variable (525600 minutes = 365 days)
 
 ## 📝 Example Usage
 
@@ -135,7 +135,7 @@ curl -X POST http://localhost:5000/api/request_cert \
   -H "Content-Type: application/json" \
   -d '{
     "CSR": "-----BEGIN CERTIFICATE REQUEST-----\nYOUR_CSR_HERE\n-----END CERTIFICATE REQUEST-----",
-    "duration": 90
+    "duration": 129600
   }'
 ```
 
@@ -156,7 +156,7 @@ curl -X POST http://localhost:5000/api/request_cert_bearer \
   -H "Content-Type: application/json" \
   -d '{
     "CSR": "-----BEGIN CERTIFICATE REQUEST-----\nYOUR_CSR_HERE\n-----END CERTIFICATE REQUEST-----",
-    "duration": 7
+    "duration": 10080
   }'
 ```
 
@@ -175,7 +175,7 @@ curl -X POST http://localhost:5000/api/request_cert_bearer \
 | `BASIC_USER` | `user` | Username for Basic Authentication |
 | `BASIC_PASS` | `password` | Password for Basic Authentication |
 | `BEARER_TOKEN` | `my-secret-token` | Token for Bearer Authentication |
-| `DEFAULT_CERT_VALIDITY_DAYS` | `365` | Default certificate validity period in days |
+| `DEFAULT_CERT_VALIDITY_MINUTES` | `525600` | Default certificate validity period in minutes (365 days) |
 
 ## 🐳 Docker Usage
 
@@ -188,15 +188,15 @@ docker run -p 5000:5000 \
   -e BASIC_USER=myuser \
   -e BASIC_PASS=mypassword \
   -e BEARER_TOKEN=my-secure-token \
-  -e DEFAULT_CERT_VALIDITY_DAYS=30 \
+  -e DEFAULT_CERT_VALIDITY_MINUTES=43200 \
   ca-demo-api
 ```
 
 ## 📊 Certificate Details
 
-- **Validity**: Configurable (default: 365 days from signing)
-  - Can be overridden per request using the `duration` parameter
-  - Default can be changed via `DEFAULT_CERT_VALIDITY_DAYS` environment variable
+- **Validity**: Configurable (default: 525600 minutes = 365 days from signing)
+  - Can be overridden per request using the `duration` parameter (in minutes)
+  - Default can be changed via `DEFAULT_CERT_VALIDITY_MINUTES` environment variable
 - **Algorithm**: SHA256
 - **Extensions**: Copied from CSR when possible
 - **Serial Number**: Randomly generated

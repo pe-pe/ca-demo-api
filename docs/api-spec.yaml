@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Basic Auth CA Demo API
+  title: CA Demo API
   description: |
     A Flask-based Certificate Authority (CA) demo application that provides certificate signing services.
 
@@ -307,11 +307,11 @@ components:
           type: integer
           minimum: 1
           description: |
-            Optional certificate validity period in days. Must be a positive integer.
-            If not specified, defaults to the value configured in DEFAULT_CERT_VALIDITY_DAYS
-            environment variable (365 days by default). Accepts numeric values that will be
-            converted to integers.
-          example: 30
+            Optional certificate validity period in minutes. Must be a positive integer.
+            If not specified, defaults to the value configured in DEFAULT_CERT_VALIDITY_MINUTES
+            environment variable (525600 minutes by default, equivalent to 365 days).
+            Accepts numeric values that will be converted to integers.
+          example: 43200
 
     ErrorResponse:
       type: object
