@@ -25,7 +25,9 @@ BASIC_PASS = os.environ.get("BASIC_PASS", "password")
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN", "my-secret-token")
 CA_KEY_PATH = "/app/ca/ca.key.pem"
 CA_CERT_PATH = "/app/ca/ca.cert.pem"
-DEFAULT_CERT_VALIDITY_DAYS = int(os.environ.get("DEFAULT_CERT_VALIDITY_DAYS", "365"))
+DEFAULT_CERT_VALIDITY_MINUTES = int(
+    os.environ.get("DEFAULT_CERT_VALIDITY_MINUTES", "525600")
+)
 
 
 # Request logging middleware
@@ -162,15 +164,15 @@ def process_cert_request():
         logger.error(f"Validation error: {error_msg}")
         return jsonify({"error": error_msg}), 400
 
-    # Parse optional duration parameter (in days)
-    validity_days = DEFAULT_CERT_VALIDITY_DAYS
+    # Parse optional duration parameter (in minutes)
+    validity_minutes = DEFAULT_CERT_VALIDITY_MINUTES
     if "duration" in data:
         try:
             duration_value = data["duration"]
             if duration_value is not None and duration_value > 0:
-                validity_days = int(duration_value)
+                validity_minutes = int(duration_value)
                 logger.info(
-                    f"Using custom certificate validity period: {validity_days} days"
+                    f"Using custom certificate validity period: {validity_minutes} minutes"
                 )
             else:
                 error_msg = "Duration must be a positive number"
@@ -181,7 +183,9 @@ def process_cert_request():
             logger.error(f"Validation error: {error_msg}")
             return jsonify({"error": error_msg}), 400
     else:
-        logger.info(f"Using default certificate validity period: {validity_days} days")
+        logger.info(
+            f"Using default certificate validity period: {validity_minutes} minutes"
+        )
 
     logger.debug(f"Attempting to parse CSR of length {len(csr_pem_str)} characters")
 
@@ -248,7 +252,9 @@ def process_cert_request():
         .public_key(csr.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.now(timezone.utc) - timedelta(1))
-        .not_valid_after(datetime.now(timezone.utc) + timedelta(days=validity_days))
+        .not_valid_after(
+            datetime.now(timezone.utc) + timedelta(minutes=validity_minutes)
+        )
     )
 
     try:
@@ -304,9 +310,12 @@ def index():
     # Generate endpoints list dynamically from Flask's route registry
     endpoints = []
     for rule in app.url_map.iter_rules():
-        # Skip static file rules and OPTIONS methods
-        if rule.endpoint != "static" and "OPTIONS" not in rule.methods:
-            methods = sorted([method for method in rule.methods if method != "HEAD"])
+        # Skip static file rules
+        if rule.endpoint != "static":
+            # Filter out HEAD and OPTIONS methods
+            methods = sorted(
+                [method for method in rule.methods if method not in ("HEAD", "OPTIONS")]
+            )
             for method in methods:
                 endpoints.append(f"{method} {rule.rule}")
 
