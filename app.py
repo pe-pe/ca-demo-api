@@ -25,7 +25,9 @@ BASIC_PASS = os.environ.get("BASIC_PASS", "password")
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN", "my-secret-token")
 CA_KEY_PATH = "/app/ca/ca.key.pem"
 CA_CERT_PATH = "/app/ca/ca.cert.pem"
-DEFAULT_CERT_VALIDITY_MINUTES = int(os.environ.get("DEFAULT_CERT_VALIDITY_MINUTES", "525600"))
+DEFAULT_CERT_VALIDITY_MINUTES = int(
+    os.environ.get("DEFAULT_CERT_VALIDITY_MINUTES", "525600")
+)
 
 
 # Request logging middleware
@@ -181,7 +183,9 @@ def process_cert_request():
             logger.error(f"Validation error: {error_msg}")
             return jsonify({"error": error_msg}), 400
     else:
-        logger.info(f"Using default certificate validity period: {validity_minutes} minutes")
+        logger.info(
+            f"Using default certificate validity period: {validity_minutes} minutes"
+        )
 
     logger.debug(f"Attempting to parse CSR of length {len(csr_pem_str)} characters")
 
@@ -248,7 +252,9 @@ def process_cert_request():
         .public_key(csr.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.now(timezone.utc) - timedelta(1))
-        .not_valid_after(datetime.now(timezone.utc) + timedelta(minutes=validity_minutes))
+        .not_valid_after(
+            datetime.now(timezone.utc) + timedelta(minutes=validity_minutes)
+        )
     )
 
     try:
@@ -307,7 +313,9 @@ def index():
         # Skip static file rules
         if rule.endpoint != "static":
             # Filter out HEAD and OPTIONS methods
-            methods = sorted([method for method in rule.methods if method not in ("HEAD", "OPTIONS")])
+            methods = sorted(
+                [method for method in rule.methods if method not in ("HEAD", "OPTIONS")]
+            )
             for method in methods:
                 endpoints.append(f"{method} {rule.rule}")
 
