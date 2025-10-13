@@ -251,7 +251,7 @@ def process_cert_request():
         .issuer_name(CA_CERT.subject)
         .public_key(csr.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.now(timezone.utc) - timedelta(1))
+        .not_valid_before(datetime.now(timezone.utc))
         .not_valid_after(
             datetime.now(timezone.utc) + timedelta(minutes=validity_minutes)
         )
