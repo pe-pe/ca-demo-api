@@ -122,7 +122,6 @@ jobs:
     - name: Build Docker image (docker/build-push-action)
       uses: docker/build-push-action@v6
       with:
-        context: .
         load: true
         tags: ca-demo-api:api-test
         cache-from: type=gha
@@ -150,7 +149,6 @@ jobs:
     - name: Build Docker image (docker/build-push-action)
       uses: docker/build-push-action@v6
       with:
-        context: .
         load: true
         tags: ca-demo-api:api-test
         cache-from: type=gha
@@ -244,16 +242,17 @@ jobs:
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
-          type=sha
-          type=schedule,pattern={{date 'YYYYMMDD-hhmmss' tz='CET'}}
+          type=raw,value={{date 'YYYYMMDD-hhmmss' tz='CET'}}
           type=ref,event=branch
           type=ref,event=pr
           type=raw,value=latest,enable={{is_default_branch}}
+        labels: |
+          org.opencontainers.image.title=CA Demo API
+          org.opencontainers.image.description=A Flask-based Certificate Authority (CA) demo application that provides certificate signing services.
 
     - name: Build and push Docker image (docker/build-push-action)
       uses: docker/build-push-action@v6
       with:
-        context: .
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
