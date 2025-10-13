@@ -22,7 +22,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.14'
+        python-version: '3.13'
 
     - name: Cache pip dependencies
       uses: actions/cache@v4
@@ -87,7 +87,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.14'
+        python-version: '3.13'
 
     - name: Cache pip dependencies
       uses: actions/cache@v4
@@ -110,7 +110,7 @@ jobs:
         path: bandit-report.json
 
     - name: Check for known security vulnerabilities
-      run: safety check --json --output safety-report.json || true
+      run: safety check --output json > safety-report.json || true
 
     - name: Upload safety results
       uses: actions/upload-artifact@v4
