@@ -5,49 +5,32 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 5
     commit-message:
       prefix: "deps-python"
       prefix-development: "deps-python-dev"
       include: "scope"
-    allow:
-      - dependency-type: "all"
     labels:
       - "dependencies"
-    pull-request-branch-name:
-      separator: "/"
 
   # Docker dependencies
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 5
     commit-message:
       prefix: "deps-docker"
       include: "scope"
     labels:
       - "dependencies"
-    pull-request-branch-name:
-      separator: "/"
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "06:00"
-    open-pull-requests-limit: 5
     commit-message:
       prefix: "ci"
       include: "scope"
     labels:
       - "dependencies"
       - "github-actions"
-    pull-request-branch-name:
-      separator: "/"
