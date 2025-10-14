@@ -1,6 +1,8 @@
 FROM python:3.14-slim
 WORKDIR /app
 
+LABEL org.opencontainers.image.description="A Flask-based Certificate Authority (CA) demo application that provides certificate signing services."
+
 # system deps for openssl usage
 RUN apt-get update && apt-get install -y --no-install-recommends openssl \
     && rm -rf /var/lib/apt/lists/*
