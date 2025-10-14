@@ -246,14 +246,12 @@ jobs:
           type=ref,event=branch
           type=ref,event=pr
           type=raw,value=latest,enable={{is_default_branch}}
-        annotations: |
-          org.opencontainers.image.title=CA Demo API
-          org.opencontainers.image.description=A Flask-based Certificate Authority (CA) demo application that provides certificate signing services.
 
     - name: Build and push Docker image (docker/build-push-action)
       uses: docker/build-push-action@v6
       with:
         push: true
+        platforms: linux/amd64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
