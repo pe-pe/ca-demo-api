@@ -215,7 +215,7 @@ jobs:
   # Deploy (only on main branch)
   deploy:
     runs-on: ubuntu-latest
-    needs: [lint, test, security, docker, api-test]
+    needs: api-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       contents: read
