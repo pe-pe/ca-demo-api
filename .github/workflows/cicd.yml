@@ -207,7 +207,7 @@ jobs:
       run: docker stop api-test || true
 
   # Deploy (only on main branch)
-  deploy:
+  deploy-ghcrio:
     runs-on: ubuntu-latest
     needs: api-test
     if: github.event_name == 'push'
