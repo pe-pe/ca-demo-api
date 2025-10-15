@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
   schedule:
@@ -24,17 +24,12 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.13'
-
-    - name: Cache pip dependencies (actions/cache)
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        cache: 'pip'
 
     - name: Install pip dependencies
       run: |
         pip install -r requirements.txt
-        pip install flake8 black bandit safety
+        pip install flake8 black bandit safety requests
 
     - name: Lint with flake8
       run: |
@@ -45,7 +40,7 @@ jobs:
       run: black --check --diff .
 
   # Unit Tests
-  test:
+  unit-test:
     runs-on: ubuntu-latest
     needs: lint
     strategy:
@@ -60,12 +55,7 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Cache pip dependencies (actions/cache)
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+        cache: 'pip'
 
     - name: Install pip dependencies
       run: |
@@ -76,7 +66,7 @@ jobs:
       run: pytest -v
 
   # Security Scanning
-  security:
+  security-scan:
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -87,12 +77,7 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.13'
-
-    - name: Cache pip dependencies (actions/cache)
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        cache: 'pip'
 
     - name: Install pip dependencies
       run: |
@@ -106,9 +91,9 @@ jobs:
       run: safety check
 
   # Docker Build for Testing
-  docker:
+  docker-build:
     runs-on: ubuntu-latest
-    needs: [test, security]
+    needs: [unit-test, security-scan]
     permissions:
       contents: read
       actions: write  # For Docker build cache
@@ -123,17 +108,24 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         load: true
-        tags: ca-demo-api:api-test
+        tags: ca-demo-api:build
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        outputs: type=docker,dest=${{ runner.temp }}/ca-demo-api.tar
+
+    - name: Cache Docker Image (actions/upload-artifact)
+      uses: actions/upload-artifact@v4
+      with:
+        # used build job hash as name to avoid overwriting previous builds
+        name: ca-demo-api-${{ github.sha }}
+        path: ${{ runner.temp }}/ca-demo-api.tar
 
   # API Testing
   api-test:
     runs-on: ubuntu-latest
-    needs: docker
+    needs: docker-build
     permissions:
       contents: read
-      actions: write  # For Docker build cache
     steps:
     - name: Checkout (actions/checkout)
       uses: actions/checkout@v5
@@ -142,34 +134,38 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.13'
+        cache: 'pip'
 
     - name: Set up Docker Buildx (docker/setup-buildx-action)
       uses: docker/setup-buildx-action@v3
 
-    - name: Build Docker image (docker/build-push-action)
-      uses: docker/build-push-action@v6
+    - name: Download Cached Docker Image (actions/download-artifact)
+      uses: actions/download-artifact@v4
       with:
-        load: true
-        tags: ca-demo-api:api-test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        name: ca-demo-api-${{ github.sha }}
+        path: ${{ runner.temp }}/ca-demo-api.tar
 
-    - name: Install pip integration dependencies
+    - name: Docker Load Image
+      run: |
+        docker load --input ${{ runner.temp }}/ca-demo-api.tar
+        docker image ls -a
+
+    - name: Install pip integration test dependencies
       run: |
         pip install requests
 
     - name: Run docker image for API tests
       run: |
-        docker run -d --name api-test -p 5000:5000 ca-demo-api:api-test
+        docker run -d --name api-test -p 5000:5000 ca-demo-api:build
         sleep 5
 
     - name: Test docker image with curl
       run: |
         # Test basic endpoint
-        curl -f http://localhost:5000/ || exit 1
+        curl --connect-timeout 5 -f http://localhost:5000/ || exit 1
 
         # Test CA cert endpoint
-        curl -f http://localhost:5000/api/ca_cert || exit 1
+        curl --connect-timeout 5 -f http://localhost:5000/api/ca_cert || exit 1
 
     - name: Run API integration tests with python
       run: |
@@ -188,8 +184,7 @@ jobs:
             'CSR': 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ3BUQ0NBWTBDQVFBd0ZqRVVNQklHQTFVRUF4TUxaWGhoYlhCc1pTNWpiMjB3Z2dFaU1BMEdDU3FHU0liMwpEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUURjVEhMd1dpSDVaNUlLM1JobUcxbk5YcnVFUk0zd1NGd3NoMGRoCk9lU2hDaVpVRTBKcWpmVllrR1UzMEV5ZHBXK2hTeEt1aE9jRHJWVEt5bzlGVE54b2E2ZWp2bE9iekl1MzlXZFUKQVJvSVQ1Y05OTFdmZ2p4eFVKNzcwMDVUU2E2VG1pbXpYUFpuZ0NMWjhCRUpGVnlYWjE2cUUrd0pYRUlLWVl5cQpZTzRLRjRnSE5NVjd4bHBUODdKSnJ6aEd6OWJsM2VvVy8xa1NkZE1oRHNlSzhhVEk0K2x3MisrVGNmelBDbkVnCjlvZGxqL09neHVrd21oaHJ2UTFSbENNR0tZcmNoWWJMaU11dlZZa29lalhKRlE3YlE3b1NYc2ovYWxzOG5sazkKRmU2QWtGTlltc2xpNXJHMkUyVGlMOUIxci9KeDNGbmMyRDNjRG9wSDJTSk5BWWd2QWdNQkFBR2dTakJJQmdrcQpoa2lHOXcwQkNRNHhPekE1TUNjR0ExVWRFUVFnTUI2Q0MyVjRZVzF3YkdVdVkyOXRnZzkzZDNjdVpYaGhiWEJzClpTNWpiMjB3RGdZRFZSMFBBUUgvQkFRREFnV2dNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUNvMzNUZStzMEQKS0NOT3FybVBYaGRNNFRxSGx5SklDeURHdXhqcEh4UW5SOUZocHA0SlZoWDI0WEpVT2NGMjZRcFN5NEdLbkVmdwpBa2pFNW1kV3IyL2dLRTU0M1pIc2tmcnhFSU1rSHBwOXRNOWZzWDlNWXo4Vm82RXhqTkxRbDh6bFhXZ1lBZllGCi9VZmRqY2RWRFZWZ0xGeEt0NE5pRHVlTHpETDR0Z0lYbUNienN1eHl2N2JPcWh0MTBKTzZQcGZLRVRJS0pzSnIKbnlFOUJxZXE3RHFKakptY0FObGkzay9wdmNmc2tjMHVmQ1VvdDhFVklURGlhYXNxakhkWFdKKzVCbXFxdFhYaQpZK09NNzlJdFFWak1aNHRPdmEvTlp0OUR2Y2hGYlJKY1JqRGthU0hjN01SU1VSbE5tT2VFT09QcmVDQTVjZHc0ClJWUXl1YjMyT0lEMAotLS0tLUVORCBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0K'
         }
 
-        response = requests.post('http://localhost:5000/api/request_cert',
-                               json=csr_data, headers=headers)
+        response = requests.post('http://localhost:5000/api/request_cert', json=csr_data, headers=headers)
         print(f'Basic auth test: {response.status_code}')
         if response.status_code not in [200, 201]:
             print(f'Basic auth test FAILED: Expected 200/201, got {response.status_code}')
@@ -198,8 +193,7 @@ jobs:
 
         # Test bearer token
         headers = {'Authorization': 'Bearer my-secret-token', 'Content-Type': 'application/json'}
-        response = requests.post('http://localhost:5000/api/request_cert_bearer',
-                               json=csr_data, headers=headers)
+        response = requests.post('http://localhost:5000/api/request_cert_bearer', json=csr_data, headers=headers)
         print(f'Bearer token test: {response.status_code}')
         if response.status_code not in [200, 201]:
             print(f'Bearer token test FAILED: Expected 200/201, got {response.status_code}')
@@ -216,7 +210,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: api-test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
