@@ -143,7 +143,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: ca-demo-api-${{ github.sha }}
-        path: ${{ runner.temp }}/ca-demo-api.tar
+        path: ${{ runner.temp }}
 
     - name: Docker Load Image
       run: |
