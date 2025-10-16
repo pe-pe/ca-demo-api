@@ -4,93 +4,121 @@
 [![Documentation](https://img.shields.io/badge/Documentation-Swagger%20UI-blue.svg)](https://pe-pe.github.io/ca-demo-api/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A Flask-based Certificate Authority (CA) demo application that provides API based certificate signing services with multiple authentication methods.
+A Flask-based Certificate Authority (CA) demo application that provides HTTP-based certificate signing services with multiple authentication methods for testing and development purposes.
 
->
 > **⚠️ SECURITY WARNING: TESTING PURPOSES ONLY**
 >
 > This application is designed **ONLY for testing and demonstration purposes**.
 > **DO NOT use this in production environments.**
->
 
+## Motivation
 
-## 💡 Motivation
+This project was created to provide a simple HTTP endpoint for testing and demonstrating certificate authority integrations, particularly with custom certificate issuers in [cert-manager](https://cert-manager.io/). It serves as a reference implementation for CA APIs and can be used for:
 
-This project was created to provide a simple HTTP endpoint for integrating with custom certificate issuers in [cert-manager](https://cert-manager.io/). It can be used for testing cert-manager configurations and custom issuer implementations.
+- Testing cert-manager configurations and custom issuer implementations
+- Demonstrating HTTP-based certificate signing workflows
+- Development and testing of certificate management systems
+- Educational purposes for understanding CA operations
 
-## 🚀 Quick Start
+## Features
+
+- **HTTP-based Certificate Signing**: RESTful API for certificate signing operations
+- **Multiple Authentication Methods**: Basic Auth and Bearer Token authentication
+- **Flexible CSR Format Support**: Accepts PEM, Base64 encoded PEM, and Base64 encoded DER formats
+- **Configurable Certificate Validity**: Customizable certificate duration per request
+- **OpenAPI Documentation**: Complete API specification with interactive documentation
+- **Docker Support**: Ready-to-use Docker container for easy deployment
+- **Environment Configuration**: Configurable via environment variables
+
+## Quick Start
+
+### Docker Deployment
+
+```bash
+# Run latest available image with default parameters
+docker run -p 5000:5000 ghcr.io/pe-pe/ca-demo-api:latest
+# Build and run with Docker
+docker build -t ca-demo-api .
+docker run -p 5000:5000 ca-demo-api
+```
+
+### Local Development
 
 ```bash
 # Clone the repository
 git clone https://github.com/pe-pe/ca-demo-api.git
 cd ca-demo-api
-
 # Install dependencies
 pip install -r requirements.txt
-
 # Run the application
 python app.py
 ```
 
-## 📖 API Documentation
+The API will be available at `http://localhost:5000`
 
-### Interactive Documentation
+## API Documentation
+
+**Interactive Documentation:**
 - **Swagger UI**: [View Interactive Docs](https://pe-pe.github.io/ca-demo-api/) (GitHub Pages)
 - **OpenAPI Spec**: [api-spec.yaml](./docs/api-spec.yaml)
 
 
-## 🔐 Authentication
+## Authentication
 
-The API supports two authentication methods:
+The API supports two authentication methods for certificate signing operations:
 
-### 1. Basic Authentication
-- **Username**: `user` (configurable via `BASIC_USER` env var)
-- **Password**: `password` (configurable via `BASIC_PASS` env var)
-- **Header**: `Authorization: Basic <base64(username:password)>`
+### Basic Authentication
+- **Username**: `user` (configurable via `BASIC_USER` environment variable)
+- **Password**: `password` (configurable via `BASIC_PASS` environment variable)
+- **Header Format**: `Authorization: Basic <base64(username:password)>`
 
-### 2. Bearer Token
-- **Token**: `my-secret-token` (configurable via `BEARER_TOKEN` env var)
-- **Header**: `Authorization: Bearer <token>`
+### Bearer Token Authentication
+- **Token**: `my-secret-token` (configurable via `BEARER_TOKEN` environment variable)
+- **Header Format**: `Authorization: Bearer <token>`
 
-## 📋 API Endpoints
+## API Endpoints
 
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| `GET` | `/` | None | Get API information |
-| `GET` | `/api/ca_cert` | None | Retrieve CA certificate |
-| `POST` | `/api/request_cert` | Basic Auth | Request certificate signing |
-| `POST` | `/api/request_cert_bearer` | Bearer Token | Request certificate signing |
+| Method | Endpoint | Authentication | Description |
+|--------|----------|----------------|-------------|
+| `GET` | `/` | None | API information and health status |
+| `GET` | `/api/ca_cert` | None | Retrieve CA certificate in PEM format |
+| `POST` | `/api/request_cert` | Basic Auth | Request certificate signing with Basic Authentication |
+| `POST` | `/api/request_cert_bearer` | Bearer Token | Request certificate signing with Bearer Token |
 
-## 🔧 Certificate Signing Request (CSR) Formats
+## Certificate Signing Requests (CSR)
 
-The API accepts CSRs in multiple formats:
+The API accepts Certificate Signing Requests in multiple formats for maximum compatibility:
 
-### 1. Direct PEM Format
+### Supported CSR Formats
+
+**1. Direct PEM Format**
 ```json
 {
   "CSR": "-----BEGIN CERTIFICATE REQUEST-----\nMIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20...\n-----END CERTIFICATE REQUEST-----"
 }
 ```
 
-### 2. Base64 Encoded PEM
+**2. Base64 Encoded PEM**
 ```json
 {
-  "CSR": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1dqQ0NBVUlDQVFBd0ZURVRNQKVA..."
+  "CSR": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1dqQ0NBVUlDQVFBd0ZURVRNQKFA..."
 }
 ```
 
-### 3. Base64 Encoded DER
+**3. Base64 Encoded DER**
 ```json
 {
   "CSR": "MIICWjCCAUICAQAwFTETMBEGA1UEAwwKZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3..."
 }
 ```
 
-## ⏱️ Certificate Validity Duration
+### Certificate Validity Duration
 
 You can optionally specify the certificate validity period by including a `duration` field in your request:
 
-### Custom Duration (30 days = 43200 minutes)
+**Custom Duration Examples:**
+
+30 days (43200 minutes):
 ```json
 {
   "CSR": "-----BEGIN CERTIFICATE REQUEST-----\nYOUR_CSR_HERE\n-----END CERTIFICATE REQUEST-----",
@@ -98,7 +126,7 @@ You can optionally specify the certificate validity period by including a `durat
 }
 ```
 
-### Custom Duration (7 days = 10080 minutes)
+7 days (10080 minutes):
 ```json
 {
   "CSR": "-----BEGIN CERTIFICATE REQUEST-----\nYOUR_CSR_HERE\n-----END CERTIFICATE REQUEST-----",
@@ -106,19 +134,22 @@ You can optionally specify the certificate validity period by including a `durat
 }
 ```
 
-**Notes:**
-- `duration` must be a positive integer (accepts numeric strings and floats, converts to integer)
-- `duration` represents the validity period in minutes
-- If not specified, defaults to the value of `DEFAULT_CERT_VALIDITY_MINUTES` environment variable (525600 minutes = 365 days)
+**Duration Field (Optional):**
+- Must be a positive integer (accepts numeric strings and floats, converts to integer)
+- Represents the validity period in minutes from the time of signing
+- If not specified, defaults to `DEFAULT_CERT_VALIDITY_MINUTES` environment variable (525600 minutes = 365 days)
 
-## 📝 Example Usage
+## Usage Examples
 
-### Get CA Certificate
+### Retrieve CA Certificate
+
 ```bash
 curl -X GET http://localhost:5000/api/ca_cert
 ```
 
-### Request Certificate (Basic Auth)
+### Certificate Signing with Basic Authentication
+
+**Standard Request:**
 ```bash
 curl -X POST http://localhost:5000/api/request_cert \
   -u user:password \
@@ -128,7 +159,7 @@ curl -X POST http://localhost:5000/api/request_cert \
   }'
 ```
 
-### Request Certificate with Custom Duration (Basic Auth)
+**Request with Custom Duration (90 days):**
 ```bash
 curl -X POST http://localhost:5000/api/request_cert \
   -u user:password \
@@ -139,7 +170,9 @@ curl -X POST http://localhost:5000/api/request_cert \
   }'
 ```
 
-### Request Certificate (Bearer Token)
+### Certificate Signing with Bearer Token Authentication
+
+**Standard Request:**
 ```bash
 curl -X POST http://localhost:5000/api/request_cert_bearer \
   -H "Authorization: Bearer my-secret-token" \
@@ -149,7 +182,7 @@ curl -X POST http://localhost:5000/api/request_cert_bearer \
   }'
 ```
 
-### Request Certificate with Custom Duration (Bearer Token)
+**Request with Custom Duration (7 days):**
 ```bash
 curl -X POST http://localhost:5000/api/request_cert_bearer \
   -H "Authorization: Bearer my-secret-token" \
@@ -160,52 +193,55 @@ curl -X POST http://localhost:5000/api/request_cert_bearer \
   }'
 ```
 
-## ⚠️ Error Responses
+## Error Responses
 
 | Status Code | Description | Example Response |
 |-------------|-------------|------------------|
-| `400` | Bad Request | `{"error": "missing csr field (PEM or base64 DER) in JSON body"}` |
-| `401` | Unauthorized | `Unauthorized` |
-| `500` | Internal Server Error | `{"error": "Failed to sign certificate: ..."}` |
+| `400` | Bad Request - Invalid or missing CSR | `{"error": "missing csr field (PEM or base64 DER) in JSON body"}` |
+| `401` | Unauthorized - Invalid credentials | `Unauthorized` |
+| `500` | Internal Server Error - Certificate signing failure | `{"error": "Failed to sign certificate: ..."}` |
 
-## 🛠️ Environment Variables
+## Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+### Environment Variables
+
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
 | `BASIC_USER` | `user` | Username for Basic Authentication |
 | `BASIC_PASS` | `password` | Password for Basic Authentication |
-| `BEARER_TOKEN` | `my-secret-token` | Token for Bearer Authentication |
+| `BEARER_TOKEN` | `my-secret-token` | Bearer token for token-based authentication |
 | `DEFAULT_CERT_VALIDITY_MINUTES` | `525600` | Default certificate validity period in minutes (365 days) |
 
-## 🐳 Docker Usage
+## Certificate Specifications
 
-```bash
-# Build the image
-docker build -t ca-demo-api .
+### Generated Certificate Properties
 
-# Run the container
-docker run -p 5000:5000 \
-  -e BASIC_USER=myuser \
-  -e BASIC_PASS=mypassword \
-  -e BEARER_TOKEN=my-secure-token \
-  -e DEFAULT_CERT_VALIDITY_MINUTES=43200 \
-  ca-demo-api
-```
+- **Signing Algorithm**: SHA256 with RSA
+- **Certificate Extensions**: Copied from the original CSR when possible
+- **Serial Number**: Randomly generated for each certificate
+- **Certificate Format**: X.509 PEM-encoded
 
-## 📊 Certificate Details
+### CA Certificate Details
 
-- **Validity**: Configurable (default: 525600 minutes = 365 days from signing)
-  - Can be overridden per request using the `duration` parameter (in minutes)
-  - Default can be changed via `DEFAULT_CERT_VALIDITY_MINUTES` environment variable
-- **Algorithm**: SHA256
-- **Extensions**: Copied from CSR when possible
-- **Serial Number**: Randomly generated
+The demo CA uses self-signed certificates for testing purposes. The CA certificate can be retrieved via the `/api/ca_cert` endpoint and used to verify issued certificates.
 
-## 🔗 Links
+## Contributing
 
-- [OpenAPI Specification](./docs/api-spec.yaml)
-- [Interactive Documentation](https://pe-pe.github.io/ca-demo-api/)
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📄 License
+### Development Setup
 
-MIT License - see [LICENSE](LICENSE) file for details.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Related Projects
+
+- [cert-manager](https://github.com/cert-manager/cert-manager) - Native Kubernetes certificate management controller
+- [HTTP Issuer](https://github.com/pe-pe/http-issuer) - Universal cert-manager issuer for HTTP-based CAs

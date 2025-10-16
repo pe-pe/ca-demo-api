@@ -206,7 +206,7 @@ jobs:
     - name: Cleanup (stop container)
       run: docker stop api-test || true
 
-  # Deploy (only on main branch)
+  # Deploy (only on push to main or develop)
   deploy-ghcrio:
     runs-on: ubuntu-latest
     needs: api-test
