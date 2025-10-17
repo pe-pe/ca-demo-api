@@ -1,14 +1,13 @@
 # https://github.com/dependabot/dependabot-core/issues/3253#issuecomment-852541544
 # This workflow doesn't have access to secrets and has a read-only token
 # It will trigger `cicd`, which has permissions
-name: Dependabot Push Trigger
+name: Push Trigger
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
-  check-dependabot:
+  flag:
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
-      - run: echo "Push from PR merged by Dependabot"
+      - run: echo "Push triggered"
