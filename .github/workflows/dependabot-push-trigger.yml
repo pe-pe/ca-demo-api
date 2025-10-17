@@ -4,6 +4,7 @@
 name: Dependabot Push Trigger
 on:
   push:
+    branches: [ main ]
 
 jobs:
   check-dependabot:
