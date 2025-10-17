@@ -10,4 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
-      - run: echo "Push from PR merged by Dependabot"
+      - run: |
+          echo "Push from PR merged by Dependabot"
+          echo "Event ${{ github.event_name }}"
+          echo "Repository ${{ github.repository }}"
+          echo "Ref ${{ github.ref }}"
+          echo "SHA ${{ github.sha }}"
+          echo "GitHub Actor ${{ github.actor }}"

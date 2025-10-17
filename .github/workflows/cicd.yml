@@ -36,6 +36,14 @@ jobs:
         pip install -r requirements.txt
         pip install flake8 black bandit safety requests
 
+        echo "Push from PR merged by Dependabot"
+        echo "Event ${{ github.event_name }}"
+        echo "Repository ${{ github.repository }}"
+        echo "Ref ${{ github.ref }}"
+        echo "SHA ${{ github.sha }}"
+        echo "GitHub Actor ${{ github.actor }}"
+
+
     - name: Lint with flake8
       run: |
         # Stop the build if there are errors
@@ -215,7 +223,7 @@ jobs:
   deploy-ghcrio:
     runs-on: ubuntu-latest
     needs: api-test
-    if: github.event_name == 'push'
+    if: ${{ github.event_name == 'push' }}
     permissions:
       contents: read
       packages: write
