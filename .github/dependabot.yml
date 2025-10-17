@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "deps-python"
+      prefix: "python"
       prefix-development: "deps-python-dev"
       include: "scope"
     labels:
@@ -18,7 +18,7 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "deps-docker"
+      prefix: "docker"
       include: "scope"
     labels:
       - "dependencies"
