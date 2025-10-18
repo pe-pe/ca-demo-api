@@ -1,4 +1,4 @@
-name: Merge Dependabot PRs
+name: Dependabot Auto-Merge PR
 
 on:
   pull_request_target:
@@ -42,7 +42,11 @@ jobs:
         run: |
           gh pr review "${{ github.event.pull_request.number }}" --approve
 
-      - name: Merge Dependabot PR
+      - name: Merge or Rebase Dependabot PR
         if: success()
         run: |
           gh pr merge --auto --squash "${{ github.event.pull_request.number }}"
+          if [ $? -ne 0 ]; then
+            echo "Auto-merge failed. Likely rebase is required, triggering dependabot."
+            gh pr comment "${{ github.event.pull_request.number }}" --body "@dependabot rebase"
+          fi
