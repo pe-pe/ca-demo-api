@@ -7,7 +7,7 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "python"
-      prefix-development: "deps-python-dev"
+      prefix-development: "python-dev"
       include: "scope"
     labels:
       - "dependencies"
