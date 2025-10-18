@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  auto-merge:
+  auto-approve:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     env:
