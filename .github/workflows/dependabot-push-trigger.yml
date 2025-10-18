@@ -1,0 +1,18 @@
+# https://github.com/dependabot/dependabot-core/issues/3253#issuecomment-852541544
+# This workflow doesn't have access to secrets and has a read-only token
+# It's status will be used to trigger 'CI/CD' pipeline
+name: Dependabot Push Trigger
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/**'
+      - 'requirements.txt'
+      - 'Dockerfile'
+
+jobs:
+  check-dependabot:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - run: echo "Push from PR merged by Dependabot"
