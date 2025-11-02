@@ -114,7 +114,7 @@ jobs:
         outputs: type=docker,dest=${{ runner.temp }}/ca-demo-api.tar
 
     - name: Cache Docker Image (actions/upload-artifact)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         # used build job hash as name to avoid overwriting previous builds
         name: ca-demo-api-${{ github.sha }}
