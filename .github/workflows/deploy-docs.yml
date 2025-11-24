@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout (actions/checkout)
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Configure Pages (actions/configure-pages)
       uses: actions/configure-pages@v5
