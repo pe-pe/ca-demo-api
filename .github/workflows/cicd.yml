@@ -140,7 +140,7 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Download Cached Docker Image (actions/download-artifact)
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: ca-demo-api-${{ github.sha }}
         path: ${{ runner.temp }}
