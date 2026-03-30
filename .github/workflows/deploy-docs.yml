@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Configure Pages (actions/configure-pages)
-      uses: actions/configure-pages@v5
+      uses: actions/configure-pages@v6
 
     - name: Upload Docs (actions/upload-pages-artifact)
       uses: actions/upload-pages-artifact@v4
