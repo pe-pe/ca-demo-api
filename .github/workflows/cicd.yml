@@ -29,7 +29,7 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install -r requirements.txt
-        pip install flake8 black bandit safety requests
+        pip install flake8 black bandit pip-audit requests
 
     - name: Lint with flake8
       run: |
@@ -82,13 +82,13 @@ jobs:
     - name: Install pip dependencies
       run: |
         pip install -r requirements.txt
-        pip install flake8 black bandit safety
+        pip install flake8 black bandit pip-audit
 
     - name: Security scan with bandit
       run: bandit --skip B104 app.py
 
-    - name: Security scan with safety
-      run: safety check
+    - name: Security scan with pip-audit
+      run: pip-audit -r requirements.txt
 
   # Docker Build for Testing
   docker-build:
