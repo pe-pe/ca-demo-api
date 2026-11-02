@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.15-slim
 WORKDIR /app
 
 LABEL org.opencontainers.image.description="A Flask-based Certificate Authority (CA) demo application that provides certificate signing services."
